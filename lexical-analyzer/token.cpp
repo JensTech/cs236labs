@@ -1,3 +1,5 @@
+// Robert Williams CS 236
+
 #include "token.h"
 #include <string>
 #include <sstream>
@@ -10,7 +12,6 @@ Token::Token(tokenType type, string extracted, int line) {
 }
 
 Token::~Token() {
-
 }
 
 string Token::toString() {

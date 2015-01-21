@@ -1,3 +1,5 @@
+// Robert Williams CS 236
+
 #include "scanner.h"
 #include <ctype.h>
 #include <vector>
@@ -10,7 +12,7 @@ Scanner::Scanner(istream* in) {
 Scanner::~Scanner() {
 }
 
-void Scanner::lexicalAnalysis() {
+vector<Token*> Scanner::lexicalAnalysis() {
   char c;
   vector<Token*> tokens;
   this->line = 1;
@@ -93,11 +95,7 @@ void Scanner::lexicalAnalysis() {
     }
   }
 
-  // print results
-  for (unsigned int i = 0; i < tokens.size(); i++) {
-    cout << tokens[i]->toString() << endl;
-  }
-  cout << "Total Tokens = " << tokens.size();
+  return tokens;
 }
 
 Token* Scanner::consume_alpha_numeric() {
@@ -141,7 +139,7 @@ Token* Scanner::consume_block_comment() {
     c = this->in->get();
     // return undefined on end of file
     if (this->in->eof()) {
-      return new Token(UNDEFINED, "", start_line);
+      return new Token(UNDEFINED, extracted, start_line);
     }
     // end comment on |#
     if (c == '|' && this->in->peek() == '#') {
@@ -164,7 +162,7 @@ Token* Scanner::consume_string() {
     c = this->in->get();
     // if there is a end of file,
     if (this->in->eof()) {
-      return new Token(UNDEFINED, "", start_line);
+      return new Token(UNDEFINED, extracted, start_line);
     }
 
     if (c == '\'') {
