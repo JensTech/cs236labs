@@ -76,9 +76,13 @@ vector<Token*> Scanner::lexicalAnalysis() {
       case '#':
       if (this->in->peek() == '|') {
         this->in->get();
-        tokens.push_back(this->consume_block_comment());
+        // remove comments
+        //tokens.push_back(this->consume_block_comment());
+        this->consume_block_comment();
       } else {
-        tokens.push_back(this->consume_line_comment());
+      	// remove comments
+        //tokens.push_back(this->consume_line_comment());
+        this->consume_line_comment();
       }
       break;
 

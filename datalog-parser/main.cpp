@@ -31,6 +31,8 @@ int main(int argc, char* argv[]) {
   	Parser parser = Parser(tokens);
   	// now run the parser
   	parser.datalogParsing();
+  	// print the results
+  	cout << parser.toString();
 	}
   return 0;
 }
