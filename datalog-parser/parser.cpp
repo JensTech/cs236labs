@@ -27,7 +27,7 @@ string Parser::toString() {
 
 // grammar functions
 
-void Parser::datalogProgram() {
+void Parser::datalog() {
 	this->consumeToken(SCHEMES);
 	this->consumeToken(COLON);
 	
@@ -62,23 +62,17 @@ void Parser::scheme() {
 }
 
 void Parser::schemeList() {
-	vector<Token*> tmp = this->tokens;
-	try {
+	if (this->nextTokenType() == ID) {
 		scheme();
 		schemeList();
-	} catch (Token* errorToken) {
-		this->tokens = tmp;
 	}
 }
 
 void Parser::idList() {
-	vector<Token*> tmp = this->tokens;
-	try {
+	if (this->nextTokenType() == COMMA) {
 		this->consumeToken(COMMA);
 		this->consumeToken(ID);
 		this->idList();
-	} catch (Token* errorToken) {
-		this->tokens = tmp;
 	}
 }
 
@@ -94,12 +88,9 @@ void Parser::fact() {
 }
 
 void Parser::factList() {
-	vector<Token*> tmp = this->tokens;
-	try {
+	if (this->nextTokenType() == ID) {
 		this->fact();
 		this->factList();
-	} catch (Token* errorToken) {
-		this->tokens = tmp;
 	}
 }
 
@@ -115,12 +106,9 @@ void Parser::rule() {
 }
 
 void Parser::ruleList() {
-	vector<Token*> tmp = this->tokens;
-	try {
+	if (this->nextTokenType() == ID) {
 		this->rule();
 		this->ruleList();
-	} catch (Token* errorToken) {
-		this->tokens = tmp;
 	}
 }
 
@@ -145,13 +133,10 @@ void Parser::predicate() {
 }
 
 void Parser::predicateList() {
-	vector<Token*> tmp = this->tokens;
-	try {
+	if (this->nextTokenType() == COMMA) {
 		this->consumeToken(COMMA);
 		this->predicate();
 		this->predicateList();
-	} catch (Token* errorToken) {
-		this->tokens = tmp;
 	}
 }
 
@@ -166,13 +151,10 @@ void Parser::parameter() {
 }
 
 void Parser::parameterList() {
-	vector<Token*> tmp = this->tokens;
-	try {
+	if (this->nextTokenType() == COMMA) {
 		this->consumeToken(COMMA);
 		this->parameter();
 		this->parameterList();
-	} catch (Token* errorToken) {
-		this->tokens = tmp;
 	}
 }
 
@@ -201,23 +183,17 @@ void Parser::query() {
 }
 
 void Parser::queryList() {
-	vector<Token*> tmp = this->tokens;
-	try {
+	if (this->nextTokenType() == ID) {
 		this->query();
 		this->queryList();
-	} catch (Token* errorToken) {
-		this->tokens = tmp;
 	}
 }
 
 void Parser::stringList() {
-	vector<Token*> tmp = this->tokens;
-	try {
+	if (this->nextTokenType() == COMMA) {
 		this->consumeToken(COMMA);
 		this->consumeToken(STRING);
 		this->stringList();
-	} catch (Token* errorToken) {
-		this->tokens = tmp;
 	}
 }
 
@@ -233,6 +209,7 @@ tokenType Parser::nextTokenType() {
 
 Token* Parser::consumeToken(tokenType type) {
 	if (this->nextTokenType() != type) {
+		cout << this->nextToken()->toString() << endl;
 		throw this->nextToken();
 	}
 	Token* tmp = this->tokens[0];

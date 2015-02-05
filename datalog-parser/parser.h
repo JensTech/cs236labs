@@ -21,7 +21,7 @@ private:
 	vector<Token*> tokens;
 	Token* errorToken;
 	// grammar functions
-	void datalogProgram();
+	void datalog();
 	void scheme();
 	void schemeList();
 	void idList();
