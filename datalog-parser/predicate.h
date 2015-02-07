@@ -1,23 +1,21 @@
 // Robert Williams CS 236
 
-#include <iostream>
-#include <stdio.h>
-#include <string>
-#include <map>
-#include <vector>
-#include "token.h"
-using namespace std;
-
 #ifndef PREDICATE_H
 #define PREDICATE_H
 
+#include <vector>
+#include "token.h"
+#include "parameter.h"
+
 class Predicate {
 public:
-	Predicate();
+	Predicate(Token* id);
 	~Predicate();
-private:
+	void addParameter(Parameter* parameter);
+	string toString();
+	
 	Token* id;
-	vector<Parameter*> parameters;
+	vector<Parameter*> parameterList;
 };
 
 #endif /* PREDICATE_H */

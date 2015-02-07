@@ -5,24 +5,21 @@
 Parser::Parser(vector<Token*> tokens) {
 	this->tokens = tokens;
 	this->errorToken = NULL;
+	this->datalogProgram = NULL;
 }
 
 Parser::~Parser() {
 }
 
-void Parser::datalogParsing() {
+DatalogProgram* Parser::datalogParsing() {
+	if (this->datalogProgram != NULL) delete this->datalogProgram;
+	this->datalogProgram = new DatalogProgram();
 	try {
-		this->datalogProgram();
+		this->datalog();
 	} catch (Token* errorToken) {
-		this->errorToken = errorToken;
+		this->datalogProgram->setError(errorToken);
 	}
-}
-
-string Parser::toString() {
-	if (this->errorToken != NULL) {
-		return "Failure!\n  " + this->errorToken->toString();
-	}
-	return "Success!";
+	return this->datalogProgram;
 }
 
 // grammar functions
@@ -52,13 +49,16 @@ void Parser::datalog() {
 }
 
 void Parser::scheme() {
-	this->consumeToken(ID);
+	Predicate* scheme = new Predicate(this->consumeToken(ID));
 	this->consumeToken(LEFT_PAREN);
-	this->consumeToken(ID);
 	
-	this->idList();
+	// put the expected id into a parameter object and add it to the scheme
+	scheme->addParameter(new Parameter(this->consumeToken(ID)));
+	this->idList(scheme);
 	
 	this->consumeToken(RIGHT_PAREN);
+	
+	this->datalogProgram->addScheme(scheme);
 }
 
 void Parser::schemeList() {
@@ -68,23 +68,32 @@ void Parser::schemeList() {
 	}
 }
 
-void Parser::idList() {
+void Parser::idList(Predicate* predicate) {
 	if (this->nextTokenType() == COMMA) {
 		this->consumeToken(COMMA);
-		this->consumeToken(ID);
-		this->idList();
+		
+		// put the expected id into a parameter object and add it to the predicate
+		predicate->addParameter(new Parameter(this->consumeToken(ID)));
+		this->idList(predicate);
 	}
 }
 
 void Parser::fact() {
-	this->consumeToken(ID);
+	Predicate* fact = new Predicate(this->consumeToken(ID));
 	this->consumeToken(LEFT_PAREN);
-	this->consumeToken(STRING);
 	
-	this->stringList();
+	
+	// add the string to the program domain
+	Token* stringToken = this->consumeToken(STRING);
+	this->datalogProgram->addDomainValue(stringToken->getExtracted());
+	// put the expected string into a parameter object and add it to the predicate
+	fact->addParameter(new Parameter(stringToken));
+	this->stringList(fact);
 	
 	this->consumeToken(RIGHT_PAREN);
 	this->consumeToken(PERIOD);
+	
+	this->datalogProgram->addFact(fact);
 }
 
 void Parser::factList() {
@@ -95,14 +104,17 @@ void Parser::factList() {
 }
 
 void Parser::rule() {
-	this->headPredicate();
+	Rule* rule = new Rule();
+	rule->setHeadPredicate(this->headPredicate());
 	
 	this->consumeToken(COLON_DASH);
 	
-	this->predicate();
-	this->predicateList();
+	rule->addPredicate(this->predicate());
+	this->predicateList(rule);
 	
 	this->consumeToken(PERIOD);
+	
+	this->datalogProgram->addRule(rule);
 }
 
 void Parser::ruleList() {
@@ -112,74 +124,86 @@ void Parser::ruleList() {
 	}
 }
 
-void Parser::headPredicate() {
-	this->consumeToken(ID);
-	this->consumeToken(LEFT_PAREN);
-	this->consumeToken(ID);
-	
-	this->idList();
-	
-	this->consumeToken(RIGHT_PAREN);
-}
-
-void Parser::predicate() {
-	this->consumeToken(ID);
+Predicate* Parser::headPredicate() {
+	Token* id = this->consumeToken(ID);
+	Predicate* headPredicate = new Predicate(id);
 	this->consumeToken(LEFT_PAREN);
 	
-	this->parameter();
-	this->parameterList();
+	// put the expected id into a parameter object and add it to the head predicate
+	headPredicate->addParameter(new Parameter(this->consumeToken(ID)));
+	this->idList(headPredicate);
 	
 	this->consumeToken(RIGHT_PAREN);
+	
+	return headPredicate;
 }
 
-void Parser::predicateList() {
+Predicate* Parser::predicate() {
+	Predicate* predicate = new Predicate(this->consumeToken(ID));
+	this->consumeToken(LEFT_PAREN);
+	
+	predicate->addParameter(this->parameter());
+	this->parameterList(predicate);
+	
+	this->consumeToken(RIGHT_PAREN);
+	
+	return predicate;
+}
+
+void Parser::predicateList(Rule* rule) {
 	if (this->nextTokenType() == COMMA) {
 		this->consumeToken(COMMA);
-		this->predicate();
-		this->predicateList();
+		rule->addPredicate(this->predicate());
+		this->predicateList(rule);
 	}
 }
 
-void Parser::parameter() {
+Parameter* Parser::parameter() {
 	if (this->nextTokenType() == STRING) {
-		this->consumeToken(STRING);
+		return new Parameter(this->consumeToken(STRING));
 	} else if (this->nextTokenType() == ID) {
-		this->consumeToken(ID);
+		return new Parameter(this->consumeToken(ID));
 	} else {
-		this->expression();
+		return this->expression();
 	}
 }
 
-void Parser::parameterList() {
+void Parser::parameterList(Predicate* predicate) {
 	if (this->nextTokenType() == COMMA) {
 		this->consumeToken(COMMA);
-		this->parameter();
-		this->parameterList();
+		predicate->addParameter(this->parameter());
+		this->parameterList(predicate);
 	}
 }
 
-void Parser::expression() {
+Parameter* Parser::expression() {
 	this->consumeToken(LEFT_PAREN);
 	
-	this->parameter();
-	this->operatorGrammar();
-	this->parameter();
+	Parameter* expression = new Parameter(NULL);
+	Parameter* firstParameter = this->parameter();
+	Token* operatorToken = this->operatorGrammar();
+	Parameter* secondParameter = this->parameter();
+	expression->expression(firstParameter, operatorToken, secondParameter);
 	
 	this->consumeToken(RIGHT_PAREN);
+	
+	return expression;
 }
 
-void Parser::operatorGrammar() {
+Token* Parser::operatorGrammar() {
 	if (this->nextTokenType() == ADD) {
-		this->consumeToken(ADD);
+		return this->consumeToken(ADD);
 	} else {
-		this->consumeToken(MULTIPLY);
+		return this->consumeToken(MULTIPLY);
 	}
 }
 
 void Parser::query() {
-	this->predicate();
+	Predicate* query = this->predicate();
 	
 	this->consumeToken(Q_MARK);
+	
+	this->datalogProgram->addQuery(query);
 }
 
 void Parser::queryList() {
@@ -189,11 +213,16 @@ void Parser::queryList() {
 	}
 }
 
-void Parser::stringList() {
+void Parser::stringList(Predicate* predicate) {
 	if (this->nextTokenType() == COMMA) {
 		this->consumeToken(COMMA);
-		this->consumeToken(STRING);
-		this->stringList();
+		
+		// store the string in the domain
+		Token* stringToken = this->consumeToken(STRING);
+		this->datalogProgram->addDomainValue(stringToken->getExtracted());
+		// put the expected string into a parameter object and add it to the predicate
+		predicate->addParameter(new Parameter(stringToken));
+		this->stringList(predicate);
 	}
 }
 
@@ -209,11 +238,9 @@ tokenType Parser::nextTokenType() {
 
 Token* Parser::consumeToken(tokenType type) {
 	if (this->nextTokenType() != type) {
-		cout << this->nextToken()->toString() << endl;
 		throw this->nextToken();
 	}
 	Token* tmp = this->tokens[0];
-	cout << tmp->toString() << endl;
 	this->tokens.erase(this->tokens.begin());
 	return tmp;
 }

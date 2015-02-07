@@ -1,16 +1,16 @@
 // Robert Williams CS 236
 
+#ifndef TOKEN_H
+#define TOKEN_H
+
 #include <iostream>
 #include <stdio.h>
 #include <string>
 #include <map>
 using namespace std;
 
-#ifndef TOKEN_H
-#define TOKEN_H
-
 // Different types of tokens
-enum tokenType {COMMA, PERIOD, Q_MARK, LEFT_PAREN, RIGHT_PAREN, COLON, COLON_DASH, MULTIPLY, ADD, SCHEMES, FACTS, RULES, QUERIES, ID, STRING, COMMENT, WHITESPACE, UNDEFINED, END_OF_FILE};
+enum tokenType {COMMA, PERIOD, Q_MARK, LEFT_PAREN, RIGHT_PAREN, COLON, COLON_DASH, MULTIPLY, ADD, SCHEMES, FACTS, RULES, QUERIES, ID, STRING, COMMENT, WHITESPACE, UNDEFINED, END_OF_FILE, EXPRESSION};
 
 class Token {
 public:
@@ -18,6 +18,7 @@ public:
   ~Token();
   // print out a string representation of the entire token
   string toString();
+  string getExtracted();
   // access private variables publicly
   tokenType getType();
   string getText();

@@ -1,23 +1,24 @@
 // Robert Williams CS 236
 
-#include <iostream>
-#include <stdio.h>
-#include <string>
-#include <map>
-#include <vector>
-#include "token.h"
-using namespace std;
 
 #ifndef PARAMETER_H
 #define PARAMETER_H
 
+#include "token.h"
+
 class Parameter {
 public:
-	Parameter();
+	Parameter(Token* token);
 	~Parameter();
-private:
-	Predicate* headPredicate;
-	vector<Predicate*> predicateList;
+	void expression(Parameter* firstParameter, Token* operatorToken, Parameter* secondParameter);
+	void terminal(Token* token);
+	string toString();
+	
+	tokenType type;
+	Token* value;
+	Parameter* firstParameter;
+	Parameter* secondParameter;
+	Token* operatorToken;
 };
 
 #endif /* PARAMETER_H */

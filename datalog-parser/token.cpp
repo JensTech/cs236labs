@@ -20,6 +20,10 @@ string Token::toString() {
   return "(" + this->tokenString[this->type] + ",\"" + this->extracted + "\"," + ss.str() + ")";
 }
 
+string Token::getExtracted() {
+	return this->extracted;
+}
+
 tokenType Token::getType() {
 	return this->type;
 }

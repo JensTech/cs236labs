@@ -1,44 +1,43 @@
 // Robert Williams CS 236
 
-#include <iostream>
-#include <stdio.h>
-#include <string>
-#include <map>
-#include <vector>
-#include "token.h"
-using namespace std;
-
 #ifndef PARSER_H
 #define PARSER_H
+
+#include <vector>
+#include "token.h"
+#include "datalogProgram.h"
+#include "rule.h"
+#include "predicate.h"
+#include "parameter.h"
 
 class Parser {
 public:
 	Parser(vector<Token*>);
 	~Parser();
-	void datalogParsing();
-	string toString();
+	DatalogProgram* datalogParsing();
 private:
 	vector<Token*> tokens;
 	Token* errorToken;
+	DatalogProgram* datalogProgram;
 	// grammar functions
 	void datalog();
 	void scheme();
 	void schemeList();
-	void idList();
+	void idList(Predicate* predicate);
 	void fact();
 	void factList();
 	void rule();
 	void ruleList();
-	void headPredicate();
-	void predicate();
-	void predicateList();
-	void parameter();
-	void parameterList();
-	void expression();
-	void operatorGrammar();
+	Predicate* headPredicate();
+	Predicate* predicate();
+	void predicateList(Rule* rule);
+	Parameter* parameter();
+	void parameterList(Predicate* predicate);
+	Parameter* expression();
+	Token* operatorGrammar();
 	void query();
 	void queryList();
-	void stringList();
+	void stringList(Predicate* predicate);
 	// end grammar functions
 	Token* nextToken();
 	tokenType nextTokenType();

@@ -9,6 +9,7 @@
 #include "scanner.h"
 #include "token.h"
 #include "parser.h"
+#include "datalogProgram.h"
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -30,9 +31,9 @@ int main(int argc, char* argv[]) {
   	// pass the tokens to the parser
   	Parser parser = Parser(tokens);
   	// now run the parser
-  	parser.datalogParsing();
+  	DatalogProgram* parsedProgram = parser.datalogParsing();
   	// print the results
-  	cout << parser.toString();
+  	cout << parsedProgram->toString();
 	}
   return 0;
 }

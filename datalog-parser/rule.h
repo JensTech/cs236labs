@@ -1,21 +1,19 @@
 // Robert Williams CS 236
 
-#include <iostream>
-#include <stdio.h>
-#include <string>
-#include <map>
-#include <vector>
-#include "token.h"
-using namespace std;
-
 #ifndef RULE_H
 #define RULE_H
+
+#include "token.h"
+#include "predicate.h"
 
 class Rule {
 public:
 	Rule();
 	~Rule();
-private:
+	void setHeadPredicate(Predicate* headPredicate);
+	void addPredicate(Predicate* predicate);
+	string toString();
+	
 	Predicate* headPredicate;
 	vector<Predicate*> predicateList;
 };
