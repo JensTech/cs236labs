@@ -7,6 +7,10 @@ Rule::Rule() {
 }
 
 Rule::~Rule() {
+	delete this->headPredicate;
+	for (unsigned int i = 0; i < this->predicateList.size(); i++) {
+		delete this->predicateList[i];
+	}
 }
 
 void Rule::setHeadPredicate(Predicate* headPredicate) {

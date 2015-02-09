@@ -4,7 +4,6 @@
 
 Parser::Parser(vector<Token*> tokens) {
 	this->tokens = tokens;
-	this->errorToken = NULL;
 	this->datalogProgram = NULL;
 }
 
@@ -13,7 +12,7 @@ Parser::~Parser() {
 
 DatalogProgram* Parser::datalogParsing() {
 	if (this->datalogProgram != NULL) delete this->datalogProgram;
-	this->datalogProgram = new DatalogProgram();
+	this->datalogProgram = new DatalogProgram(this->tokens);
 	try {
 		this->datalog();
 	} catch (Token* errorToken) {

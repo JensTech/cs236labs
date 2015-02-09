@@ -34,6 +34,7 @@ int main(int argc, char* argv[]) {
   	DatalogProgram* parsedProgram = parser.datalogParsing();
   	// print the results
   	cout << parsedProgram->toString();
+  	delete parsedProgram;
 	}
   return 0;
 }

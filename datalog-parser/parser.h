@@ -17,7 +17,6 @@ public:
 	DatalogProgram* datalogParsing();
 private:
 	vector<Token*> tokens;
-	Token* errorToken;
 	DatalogProgram* datalogProgram;
 	// grammar functions
 	void datalog();

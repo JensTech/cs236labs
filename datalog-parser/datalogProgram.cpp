@@ -2,11 +2,30 @@
 
 #include "datalogProgram.h"
 
-DatalogProgram::DatalogProgram() {
+DatalogProgram::DatalogProgram(vector<Token*> allTokens) {
 	this->errorToken = NULL;
+	this->tokens = allTokens;
 }
 
 DatalogProgram::~DatalogProgram() {
+	for (unsigned int i = 0; i < this->schemes.size(); i++) {
+		delete this->schemes[i];
+	}
+	for (unsigned int i = 0; i < this->facts.size(); i++) {
+		delete this->facts[i];
+	}
+	for (unsigned int i = 0; i < this->rules.size(); i++) {
+		delete this->rules[i];
+	}
+	for (unsigned int i = 0; i < this->queries.size(); i++) {
+		delete this->queries[i];
+	}
+	delete this->errorToken;
+	
+	
+	for (unsigned int i = 0; i < this->tokens.size(); i++) {
+		delete this->tokens[i];
+	}
 }
 
 void DatalogProgram::addScheme(Predicate* scheme) {

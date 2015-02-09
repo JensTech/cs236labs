@@ -78,11 +78,11 @@ vector<Token*> Scanner::lexicalAnalysis() {
         this->in->get();
         // remove comments
         //tokens.push_back(this->consume_block_comment());
-        this->consume_block_comment();
+        delete this->consume_block_comment();
       } else {
       	// remove comments
         //tokens.push_back(this->consume_line_comment());
-        this->consume_line_comment();
+        delete this->consume_line_comment();
       }
       break;
 

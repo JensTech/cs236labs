@@ -7,6 +7,10 @@ Predicate::Predicate(Token* id) {
 }
 
 Predicate::~Predicate() {
+	delete this->id;
+	for (unsigned int i = 0; i < this->parameterList.size(); i++) {
+		delete this->parameterList[i];
+	}
 }
 
 void Predicate::addParameter(Parameter* parameter) {
