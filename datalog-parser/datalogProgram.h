@@ -12,7 +12,7 @@
 
 class DatalogProgram {
 public:
-	DatalogProgram(vector<Token*> allTokens);
+	DatalogProgram();
 	~DatalogProgram();
 	void addScheme(Predicate* scheme);
 	void addFact(Predicate* fact);
@@ -31,7 +31,6 @@ public:
 
 private:
 	void sortDomain();
-	vector<Token*> tokens;
 };
 
 #endif /* DATALOG_PROGRAM_H */

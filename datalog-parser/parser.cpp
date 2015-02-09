@@ -12,11 +12,19 @@ Parser::~Parser() {
 
 DatalogProgram* Parser::datalogParsing() {
 	if (this->datalogProgram != NULL) delete this->datalogProgram;
-	this->datalogProgram = new DatalogProgram(this->tokens);
+	this->datalogProgram = new DatalogProgram();
 	try {
 		this->datalog();
+		// delete unused tokens
+		for (unsigned int i = 0; i < this->tokens.size(); i++) {
+			delete this->tokens[i];
+		}
 	} catch (Token* errorToken) {
 		this->datalogProgram->setError(errorToken);
+		// delete unused tokens
+		for (unsigned int i = 1; i < this->tokens.size(); i++) {
+			delete this->tokens[i];
+		}
 	}
 	return this->datalogProgram;
 }
@@ -49,6 +57,7 @@ void Parser::datalog() {
 
 void Parser::scheme() {
 	Predicate* scheme = new Predicate(this->consumeToken(ID));
+	this->datalogProgram->addScheme(scheme);
 	this->consumeToken(LEFT_PAREN);
 	
 	// put the expected id into a parameter object and add it to the scheme
@@ -56,8 +65,6 @@ void Parser::scheme() {
 	this->idList(scheme);
 	
 	this->consumeToken(RIGHT_PAREN);
-	
-	this->datalogProgram->addScheme(scheme);
 }
 
 void Parser::schemeList() {
@@ -79,6 +86,7 @@ void Parser::idList(Predicate* predicate) {
 
 void Parser::fact() {
 	Predicate* fact = new Predicate(this->consumeToken(ID));
+	this->datalogProgram->addFact(fact);
 	this->consumeToken(LEFT_PAREN);
 	
 	
@@ -91,8 +99,6 @@ void Parser::fact() {
 	
 	this->consumeToken(RIGHT_PAREN);
 	this->consumeToken(PERIOD);
-	
-	this->datalogProgram->addFact(fact);
 }
 
 void Parser::factList() {
@@ -104,6 +110,7 @@ void Parser::factList() {
 
 void Parser::rule() {
 	Rule* rule = new Rule();
+	this->datalogProgram->addRule(rule);
 	rule->setHeadPredicate(this->headPredicate());
 	
 	this->consumeToken(COLON_DASH);
@@ -112,8 +119,6 @@ void Parser::rule() {
 	this->predicateList(rule);
 	
 	this->consumeToken(PERIOD);
-	
-	this->datalogProgram->addRule(rule);
 }
 
 void Parser::ruleList() {
@@ -199,10 +204,9 @@ Token* Parser::operatorGrammar() {
 
 void Parser::query() {
 	Predicate* query = this->predicate();
+	this->datalogProgram->addQuery(query);
 	
 	this->consumeToken(Q_MARK);
-	
-	this->datalogProgram->addQuery(query);
 }
 
 void Parser::queryList() {
@@ -241,5 +245,9 @@ Token* Parser::consumeToken(tokenType type) {
 	}
 	Token* tmp = this->tokens[0];
 	this->tokens.erase(this->tokens.begin());
+	// delete unused tokens
+	if (type != ID && type != STRING && type != ADD && type != MULTIPLY) {
+		delete tmp;
+	}
 	return tmp;
 }

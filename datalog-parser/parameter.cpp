@@ -11,10 +11,18 @@ Parameter::Parameter(Token* token) {
 }
 
 Parameter::~Parameter() {
-	delete this->value;
-	delete this->firstParameter;
-	delete this->secondParameter;
-	delete this->operatorToken;
+	if (this->value != NULL) {
+		delete this->value;
+	}
+	if (this->firstParameter != NULL) {
+		delete this->firstParameter;
+	}
+	if (this->secondParameter != NULL) {
+		delete this->secondParameter;
+	}
+	if (this->operatorToken != NULL) {
+		delete this->operatorToken;
+	}
 }
 
 void Parameter::expression(Parameter* firstParameter, Token* operatorToken, Parameter* secondParameter) {
