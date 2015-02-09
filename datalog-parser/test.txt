@@ -1,9 +1,6 @@
 Schemes:
-  snap(S,N,A,P)
-
-#comment
-
-  HasSameAddress(X,Y)
+  
+WhyDoesThisNotWork()
 
 Facts: #comment
   snap('12345','C. Brown','12 Apple','555-1234').

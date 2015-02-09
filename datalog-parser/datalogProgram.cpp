@@ -68,28 +68,28 @@ string DatalogProgram::toString() {
 	string output = "Success!\n";
 	
 	ss << this->schemes.size();
-	output += "Schemes(" + ss.str() + ")\n";
+	output += "Schemes(" + ss.str() + "):\n";
 	ss.str("");
 	for (unsigned int i = 0; i < this->schemes.size(); i++) {
 		output += "  " + this->schemes[i]->toString() + "\n";
 	}
 	
 	ss << this->facts.size();
-	output += "Facts(" + ss.str() + ")\n";
+	output += "Facts(" + ss.str() + "):\n";
 	ss.str("");
 	for (unsigned int i = 0; i < this->facts.size(); i++) {
 		output += "  " + this->facts[i]->toString() + ".\n";
 	}
 	
 	ss << this->rules.size();
-	output += "Rules(" + ss.str() + ")\n";
+	output += "Rules(" + ss.str() + "):\n";
 	ss.str("");
 	for (unsigned int i = 0; i < this->rules.size(); i++) {
 		output += "  " + this->rules[i]->toString() + ".\n";
 	}
 	
 	ss << this->queries.size();
-	output += "Queries(" + ss.str() + ")\n";
+	output += "Queries(" + ss.str() + "):\n";
 	ss.str("");
 	for (unsigned int i = 0; i < this->queries.size(); i++) {
 		output += "  " + this->queries[i]->toString() + "?\n";
@@ -97,7 +97,7 @@ string DatalogProgram::toString() {
 	
 	this->sortDomain();
 	ss << this->domain.size();
-	output += "Domain(" + ss.str() + ")";
+	output += "Domain(" + ss.str() + "):";
 	for (unsigned int i = 0; i < this->domain.size(); i++) {
 		output += "\n  " + this->domain[i];
 	}
