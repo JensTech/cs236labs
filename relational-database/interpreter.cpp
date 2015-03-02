@@ -8,7 +8,7 @@ Interpreter::Interpreter(DatalogProgram* program) {
 }
 
 Interpreter::~Interpreter() {
-
+	delete this->database;
 }
 
 void Interpreter::buildDatabase() {
@@ -88,8 +88,8 @@ string Interpreter::runQueries() {
 				indexes.push_back(j);
 			}
 		}
-		Relation* query = this->database->project("select_result", indexes);
-		this->database->addRelation("query", query);
+		Relation* project_result = this->database->project("select_result", indexes);
+		this->database->addRelation("project_result", project_result);
 
 		// rename the columns
 		vector<string> scheme;
@@ -98,19 +98,20 @@ string Interpreter::runQueries() {
 				scheme.push_back(parameter_list[j]->value->getExtracted());
 			}
 		}
-		query = this->database->rename("query", scheme);
+		Relation* rename_result = this->database->rename("project_result", scheme);
+		this->database->addRelation("rename_result", rename_result);
 
 
 		output += queries[i]->toString() + "?";
-		if (query->rows.size() == 0 && select_result->rows.size() == 0) {
+		if (rename_result->rows.size() == 0 && select_result->rows.size() == 0) {
 			output += " No\n";
 		} else {
 			stringstream ss;
 			ss << select_result->rows.size();
 			output += " Yes(" + ss.str() + ")\n";
 		}
-		if (query->rows.size() > 0) {
-			output += query->toString();
+		if (rename_result->rows.size() > 0) {
+			output += rename_result->toString();
 		}
 	}
 

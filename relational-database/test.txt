@@ -1,14 +1,22 @@
-Schemes:
-  SK(A,B)
+Schemes: 
+	people(person1,person2)
+	employer(boss,employee)
 Facts:
-  SK('a','c').
-  SK('b','c').
-  SK('b','b').
-  SK('b','c').
+	people('joe','bob').
+	people('jim','bob').
+	people('joe','jim').
+	employer('ralph','howard').
+	people('bob','bob').
 Rules:
-  DoNothing(Z) :- Stuff(Z).
+	employer(X,Y):- people(Y,X).
+	employer(X,Y):- people(X,Z),employer(Z,Y).
+	people(X,Y):- people(Y,X).
 Queries:
-  SK(A,'c')?
-  SK('b','c')?
-  SK(X,X)?
-  SK(A,B)?
+	people('joe','jim')?
+	people( who, 'bob')?
+	people('joe', anyone)?
+	people(X,X)?
+	people(X,Y)?
+	employer('ralph', X)?
+	employer('bob','bob')?
+	employer(X,Y)?

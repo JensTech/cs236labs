@@ -41,5 +41,8 @@ int main(int argc, char* argv[]) {
 	interpreter.buildDatabase();
 	cout << interpreter.runQueries();
 
+	// clean up
+	delete parsedProgram;
+
 	return 0;
 }

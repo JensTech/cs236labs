@@ -7,7 +7,11 @@ RelationalDatabase::RelationalDatabase() {
 }
 
 RelationalDatabase::~RelationalDatabase() {
-
+	map<string, Relation*>::iterator it;
+	for (it = this->relations.begin(); it != this->relations.end(); it++) {
+		delete this->getRelation(it->first);
+		// this->relations.erase(it);
+	}
 }
 
 void RelationalDatabase::addRelation(string name, Relation* relation) {
