@@ -39,6 +39,7 @@ int main(int argc, char* argv[]) {
 	Interpreter interpreter = Interpreter(parsedProgram);
 	// build the database
 	interpreter.buildDatabase();
+	cout << interpreter.runQueries();
 
 	return 0;
 }

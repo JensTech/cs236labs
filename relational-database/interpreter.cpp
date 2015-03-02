@@ -14,7 +14,6 @@ Interpreter::~Interpreter() {
 void Interpreter::buildDatabase() {
 	this->addSchemes();
 	this->addFacts();
-	this->runQueries();
 }
 
 void Interpreter::addSchemes() {
@@ -61,7 +60,9 @@ void Interpreter::addFacts() {
 	}
 }
 
-void Interpreter::runQueries() {
+string Interpreter::runQueries() {
+	string output = "";
+
 	vector<Predicate*> queries = program->queries;
 	// loop over queries
 	for (unsigned int i = 0; i < queries.size(); i++) {
@@ -77,11 +78,41 @@ void Interpreter::runQueries() {
 		for (unsigned int j = 0; j < parameter_list.size(); j++) {
 			values.push_back(parameter_list[j]->value->getExtracted());
 		}
-		cout << "\n\n";
-		Relation* query = this->database->select(relation_name, values);
+		Relation* select_result = this->database->select(relation_name, values);
+		this->database->addRelation("select_result", select_result);
 
 		// project the necessary columns
-		query = this->database->project("query", query->scheme);
-		cout << query->toString() << endl;
+		vector<int> indexes;
+		for (unsigned int j = 0; j < parameter_list.size(); j++) {
+			if (parameter_list[j]->type == ID) {
+				indexes.push_back(j);
+			}
+		}
+		Relation* query = this->database->project("select_result", indexes);
+		this->database->addRelation("query", query);
+
+		// rename the columns
+		vector<string> scheme;
+		for (unsigned int j = 0; j < parameter_list.size(); j++) {
+			if (parameter_list[j]->type == ID) {
+				scheme.push_back(parameter_list[j]->value->getExtracted());
+			}
+		}
+		query = this->database->rename("query", scheme);
+
+
+		output += queries[i]->toString() + "?";
+		if (query->rows.size() == 0 && select_result->rows.size() == 0) {
+			output += " No\n";
+		} else {
+			stringstream ss;
+			ss << select_result->rows.size();
+			output += " Yes(" + ss.str() + ")\n";
+		}
+		if (query->rows.size() > 0) {
+			output += query->toString();
+		}
 	}
+
+	return output;
 }

@@ -10,6 +10,7 @@ using namespace std;
 #include <string>
 #include <map>
 #include <vector>
+#include <sstream>
 #include "token.h"
 #include "datalogProgram.h"
 #include "predicate.h"
@@ -22,13 +23,13 @@ public:
 	Interpreter(DatalogProgram*);
 	~Interpreter();
 	void buildDatabase();
+	string runQueries();
 private:
 	DatalogProgram* program;
 	RelationalDatabase* database;
 
 	void addSchemes();
 	void addFacts();
-	void runQueries();
 };
 
 #endif /* INTERPRETER_H */

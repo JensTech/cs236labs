@@ -11,6 +11,11 @@ RelationalDatabase::~RelationalDatabase() {
 }
 
 void RelationalDatabase::addRelation(string name, Relation* relation) {
+	if (this->getRelation(name) != NULL) {
+		delete this->getRelation(name);
+		this->relations.erase(this->relations.find(name));
+	}
+	relation->name = name;
 	this->relations.insert(pair<string, Relation*>(name, relation));
 }
 
@@ -47,7 +52,6 @@ Relation* RelationalDatabase::select(string relation, vector<string> values) {
 		}
 	}
 
-	this->saveQuery(result);
 	return result;
 }
 
@@ -65,10 +69,21 @@ Relation* RelationalDatabase::project(string relation, vector<int> indexes) {
 			result_row.push_back(operand_row[indexes[j]]);
 		}
 
-		result->addRow(result_row);
+		if (result_row.size() > 0) {
+			result->addRow(result_row);
+		}
 	}
 
-	this->saveQuery(result);
+	return result;
+}
+
+Relation* RelationalDatabase::rename(string relation, vector<string> scheme) {
+	Relation* operand = this->getRelation(relation);
+	if (operand == NULL) return NULL;
+
+	Relation* result = new Relation("query", scheme);
+	result->rows = operand->rows;
+
 	return result;
 }
 
@@ -78,12 +93,4 @@ Relation* RelationalDatabase::getRelation(string name) {
 	}
 
 	return this->relations[name];
-}
-
-void RelationalDatabase::saveQuery(Relation* relation) {
-	if (this->getRelation("query") != NULL) {
-		delete this->getRelation("query");
-		this->relations.erase(this->relations.find("query"));
-	}
-	this->addRelation("query", relation);
 }
