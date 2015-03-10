@@ -110,44 +110,32 @@ bool Interpreter::runRule(Rule* rule) {
 
 	// project the joined relation to the headPredicate's parameters
 	vector<Parameter*> parameter_list = head_predicate->parameterList;
-	vector<int> indexes;
-	for (unsigned int i = 0; i < join->scheme.size(); i++) {
-		for (unsigned int j = 0; j < parameter_list.size(); j++) {
-			// check if the value in the joined scheme is also in the head predicate scheme
-			if (join->scheme[i] == parameter_list[j]->value->getExtracted()) {
-				indexes.push_back(i);
-			};
+	vector<string> new_scheme;
+	for (unsigned int i = 0; i < parameter_list.size(); i++) {
+		if (parameter_list[i]->type == ID) {
+			new_scheme.push_back(parameter_list[i]->value->getExtracted());
 		}
 	}
-	Relation* project_result = this->database->project("join", indexes);
+	Relation* project_result = this->database->project("join", new_scheme);
 	this->database->addRelation("project_result", project_result);
 
-	// rename the columns
-	vector<string> scheme;
-	for (unsigned int i = 0; i < head_predicate->parameterList.size(); i++) {
-		scheme.push_back(head_predicate->parameterList[i]->value->getExtracted());
-	}
-	Relation* rename_result = this->database->rename("project_result", scheme);
+	// rename the columns to the predefined scheme
+	string relation_name = head_predicate->id->getExtracted();
+	Relation* original_relation = this->database->getRelation(relation_name);
+	Relation* rename_result = this->database->rename("project_result", original_relation->scheme);
 	this->database->addRelation("rename_result", rename_result);
 
 	// track rows before union
-	string relation_name = head_predicate->id->getExtracted();
-	Relation* original_relation = this->database->getRelation(relation_name);
-	set<vector<string>> before_rows;
+	unsigned int size_before = 0;
 	if (original_relation != NULL) {
-		before_rows = original_relation->rows;
+		size_before = original_relation->rows.size();
 	}
 
-	Relation* union_result = NULL;
-	if (original_relation == NULL) {
-		union_result = rename_result;
-	} else {
-		union_result = this->database->relation_union(relation_name, "rename_result");
-	}
+	Relation* union_result = this->database->relation_union(relation_name, "rename_result");
 	this->database->addRelation(relation_name, union_result);
 
 	// something changed
-	if (union_result->rows != before_rows) return true;
+	if (union_result->rows.size() != size_before) return true;
 
 	// nothing changed
 	return false;
@@ -161,27 +149,27 @@ void Interpreter::runQuery(string relation_name, Predicate* query) {
 	// select with the query parameters
 	vector<Parameter*> parameter_list = query->parameterList;
 	vector<string> values;
-	for (unsigned int j = 0; j < parameter_list.size(); j++) {
-		values.push_back(parameter_list[j]->value->getExtracted());
+	for (unsigned int i = 0; i < parameter_list.size(); i++) {
+		values.push_back(parameter_list[i]->value->getExtracted());
 	}
 	Relation* select_result = this->database->select(relation_name, values);
 	this->database->addRelation("select_result", select_result);
 
 	// project the necessary columns
-	vector<int> indexes;
-	for (unsigned int j = 0; j < parameter_list.size(); j++) {
-		if (parameter_list[j]->type == ID) {
-			indexes.push_back(j);
+	vector<string> new_scheme;
+	for (unsigned int i = 0; i < parameter_list.size(); i++) {
+		if (parameter_list[i]->type == ID) {
+			new_scheme.push_back(relation->scheme[i]);
 		}
 	}
-	Relation* project_result = this->database->project("select_result", indexes);
+	Relation* project_result = this->database->project("select_result", new_scheme);
 	this->database->addRelation("project_result", project_result);
 
 	// rename the columns
 	vector<string> scheme;
-	for (unsigned int j = 0; j < parameter_list.size(); j++) {
-		if (parameter_list[j]->type == ID) {
-			scheme.push_back(parameter_list[j]->value->getExtracted());
+	for (unsigned int i = 0; i < parameter_list.size(); i++) {
+		if (parameter_list[i]->type == ID) {
+			scheme.push_back(parameter_list[i]->value->getExtracted());
 		}
 	}
 	Relation* rename_result = this->database->rename("project_result", scheme);

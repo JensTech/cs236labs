@@ -73,11 +73,11 @@ Relation* RelationalDatabase::select(string relation, vector<string> values) {
 	return result;
 }
 
-Relation* RelationalDatabase::project(string relation, vector<int> indexes) {
+Relation* RelationalDatabase::project(string relation, vector<string> new_scheme) {
 	Relation* operand = this->getRelation(relation);
 	if (operand == NULL) return NULL;
 
-	Relation* result = new Relation("query", operand->scheme);
+	Relation* result = new Relation("query", new_scheme);
 	// log this relation
 	this->created_relations.push_back(result);
 	// loop over relation rows
@@ -85,8 +85,12 @@ Relation* RelationalDatabase::project(string relation, vector<int> indexes) {
 		vector<string> operand_row = *i;
 		vector<string> result_row;
 
-		for (unsigned int j = 0; j < indexes.size(); j++) {
-			result_row.push_back(operand_row[indexes[j]]);
+		for (unsigned int j = 0; j < new_scheme.size(); j++) {
+			for (unsigned int k = 0; k < operand_row.size(); k++) {
+				if (operand->scheme[k] == new_scheme[j]) {
+					result_row.push_back(operand_row[k]);
+				}
+			}
 		}
 
 		if (result_row.size() > 0) {

@@ -19,7 +19,7 @@ public:
 	~RelationalDatabase();
 	void addRelation(string, Relation*);
 	Relation* select(string, vector<string>);
-	Relation* project(string, vector<int>);
+	Relation* project(string, vector<string>);
 	Relation* rename(string, vector<string>);
 	Relation* relation_union(string, string);
 	Relation* join(string, string);
