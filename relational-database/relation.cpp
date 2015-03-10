@@ -21,14 +21,14 @@ string Relation::toString() {
 		vector<string> row = *i;
 		for (unsigned int j = 0; j < row.size(); j++) {
 			// don't print duplicate columns
-			bool print_row = true;
+			bool print_column = true;
 			for (unsigned int k = 0; k < j; k++) {
 				if (this->scheme[j] == this->scheme[k]) {
-					print_row = false;
+					print_column = false;
 					break;
 				}
 			}
-			if (!print_row) continue;
+			if (!print_column) continue;
 
 			if (j > 0) {
 				output += ", ";
