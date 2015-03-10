@@ -18,11 +18,11 @@ public:
 	RelationalDatabase();
 	~RelationalDatabase();
 	void addRelation(string, Relation*);
-	Relation* select(string, vector<string>);
-	Relation* project(string, vector<string>);
-	Relation* rename(string, vector<string>);
-	Relation* relation_union(string, string);
-	Relation* join(string, string);
+	Relation* select(Relation*, vector<string>);
+	Relation* project(Relation*, vector<string>);
+	Relation* rename(Relation*, vector<string>);
+	Relation* relation_union(Relation*, Relation*);
+	Relation* join(Relation*, Relation*);
 	Relation* getRelation(string);
 private:
 	vector<Relation*> created_relations;

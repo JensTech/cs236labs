@@ -35,8 +35,7 @@ void RelationalDatabase::addRelation(string name, Relation* relation) {
 	this->created_relations.push_back(relation);
 }
 
-Relation* RelationalDatabase::select(string relation, vector<string> values) {
-	Relation* operand = this->getRelation(relation);
+Relation* RelationalDatabase::select(Relation* operand, vector<string> values) {
 	if (operand == NULL) return NULL;
 
 	Relation* result = new Relation("query", operand->scheme);
@@ -47,10 +46,11 @@ Relation* RelationalDatabase::select(string relation, vector<string> values) {
 		bool add_row = true;
 		vector<string> row = *i;
 		for (unsigned int j = 0; j < values.size(); j++) {
+			// make sure strings match
 			if (values[j].find("'") != string::npos && values[j] != row[j]) {
 				add_row = false;
+				break;
 			}
-
 
 			// make sure matching IDs also match value
 			if (values[j].find("'") == string::npos) {
@@ -73,56 +73,66 @@ Relation* RelationalDatabase::select(string relation, vector<string> values) {
 	return result;
 }
 
-Relation* RelationalDatabase::project(string relation, vector<string> new_scheme) {
-	Relation* operand = this->getRelation(relation);
+Relation* RelationalDatabase::project(Relation* operand, vector<string> new_scheme) {
 	if (operand == NULL) return NULL;
 
 	Relation* result = new Relation("query", new_scheme);
 	// log this relation
 	this->created_relations.push_back(result);
+
+	// map the old scheme onto the new one with indexes
+	vector<int> operand_indexes;
+	// loop over the new scheme
+	for (unsigned int i = 0; i < new_scheme.size(); i++) {
+		// for every position in the new scheme, find the corresponding index in the old scheme
+		for (unsigned int j = 0; j < operand->scheme.size(); j++) {
+			// if the scheme positions match, add the operand scheme index to the mapping
+			if (operand->scheme[j] == new_scheme[i]) {
+				operand_indexes.push_back(j);
+			}
+		}
+	}
+
 	// loop over relation rows
 	for (set<vector<string>>::iterator i = operand->rows.begin(); i != operand->rows.end(); i++) {
 		vector<string> operand_row = *i;
-		vector<string> result_row;
+		vector<string> new_row;
 
-		for (unsigned int j = 0; j < new_scheme.size(); j++) {
-			for (unsigned int k = 0; k < operand_row.size(); k++) {
-				if (operand->scheme[k] == new_scheme[j]) {
-					result_row.push_back(operand_row[k]);
-				}
-			}
+		// loop over the old->new scheme mapping
+		for (unsigned int j = 0; j < operand_indexes.size(); j++) {
+			unsigned int operand_position = operand_indexes[j];
+			new_row.push_back(operand_row[operand_position]);
 		}
 
-		if (result_row.size() > 0) {
-			result->addRow(result_row);
-		}
+		result->addRow(new_row);
 	}
 
 	return result;
 }
 
-Relation* RelationalDatabase::rename(string relation, vector<string> scheme) {
-	Relation* operand = this->getRelation(relation);
+Relation* RelationalDatabase::rename(Relation* operand, vector<string> scheme) {
 	if (operand == NULL) return NULL;
 
+	// replace the relation's scheme
 	Relation* result = new Relation("query", scheme);
 	// log this relation
 	this->created_relations.push_back(result);
+	// move the old relation's rows to the new one
 	result->rows = operand->rows;
 
 	return result;
 }
 
-Relation* RelationalDatabase::relation_union(string relation1, string relation2) {
-	Relation* operand1 = this->getRelation(relation1);
-	Relation* operand2 = this->getRelation(relation2);
-	if (operand1 == NULL || operand2 == NULL) {
-		return NULL;
-	}
+Relation* RelationalDatabase::relation_union(Relation* operand1, Relation* operand2) {
+	if (operand1 == NULL && operand2 == NULL) return NULL;
+	if (operand1 == NULL) return operand2;
+	if (operand2 == NULL) return operand1;
 
+	// use the scheme from the first operand (an arbitrary decision, both schemes should match)
 	Relation* result = new Relation("query", operand1->scheme);
 	// log this relation
 	this->created_relations.push_back(result);
+	// another arbitrary decision (you could have started with operand2's rows)
 	result->rows = operand1->rows;
 
 	// loop over relation rows
@@ -134,16 +144,13 @@ Relation* RelationalDatabase::relation_union(string relation1, string relation2)
 	return result;
 }
 
-Relation* RelationalDatabase::join(string relation1, string relation2) {
-	Relation* operand1 = this->getRelation(relation1);
-	Relation* operand2 = this->getRelation(relation2);
-	if (operand1 == NULL || operand2 == NULL) {
-		return NULL;
-	}
+Relation* RelationalDatabase::join(Relation* operand1, Relation* operand2) {
+	if (operand1 == NULL || operand2 == NULL) return NULL;
 
 	// construct the new scheme
 	vector<string> new_scheme = operand1->scheme;
 	for (unsigned int i = 0; i < operand2->scheme.size(); i++) {
+		// only include scheme elements from the second operand which are not found in the first operand
 		if (find(new_scheme.begin(), new_scheme.end(), operand2->scheme[i]) == new_scheme.end()) {
 			new_scheme.push_back(operand2->scheme[i]);
 		}
@@ -152,6 +159,24 @@ Relation* RelationalDatabase::join(string relation1, string relation2) {
 	Relation* result = new Relation("query", new_scheme);
 	// log this relation
 	this->created_relations.push_back(result);
+
+	// create a map matching indexes from operand2 to operand1 (-1 means there is no match)
+	vector<int> match_indexes;
+	for (unsigned int i = 0; i < operand2->scheme.size(); i++) {
+		// record if a match is found
+		bool match_found = false;
+		for (unsigned int j = 0; j < operand1->scheme.size(); j++) {
+			// check for match
+			if (operand2->scheme[i] == operand1->scheme[j]) {
+				match_indexes.push_back(j);
+				match_found = true;
+				break;
+			}
+		}
+
+		// -1 means there is no match
+		if (!match_found) match_indexes.push_back(-1);
+	}
 
 	// loop over operand1 rows
 	for (set<vector<string>>::iterator i = operand1->rows.begin(); i != operand1->rows.end(); i++) {
@@ -162,31 +187,21 @@ Relation* RelationalDatabase::join(string relation1, string relation2) {
 
 			// should this row be added to the resulting relation?
 			bool add_row = true;
-			// store the values of the new row
-			vector<string> new_row;
+			// store the values of the new row; initialize it with the row from the first operand
+			vector<string> new_row = operand1_row;
 
-			for (unsigned int row1 = 0; row1 < operand1_row.size(); row1++) {
-				// add the operand1 row value to the new row
-				new_row.push_back(operand1_row[row1]);
-				for (unsigned int row2 = 0; row2 < operand2_row.size(); row2++) {
-					
-					// check if operand1 scheme matches operand2 scheme
-					if (operand1->scheme[row1] == operand2->scheme[row2]) {
-						if (operand1_row[row1] != operand2_row[row2]) {
-							add_row = false;
-							// nothing really matters anymore
-							break;
-						}
-					} else {
-						// check if it's on the last iteration
-						if (row1 == operand1_row.size() - 1) {
-							// add the second operand values
-							new_row.push_back(operand2_row[row2]);
-						}
+			// loop over the second operand's row using the index map
+			for (unsigned int k = 0; k < match_indexes.size(); k++) {
+				if (match_indexes[k] == -1) {
+					// no compare necessary
+					new_row.push_back(operand2_row[k]);
+				} else {
+					// compare is necessary
+					if (operand2_row[k] != operand1_row[match_indexes[k]]) {
+						add_row = false;
+						break;
 					}
-
 				}
-				if (!add_row) break;
 			}
 
 			// add the row if appropriate
@@ -198,9 +213,7 @@ Relation* RelationalDatabase::join(string relation1, string relation2) {
 }
 
 Relation* RelationalDatabase::getRelation(string name) {
-	if (this->relations.find(name) == relations.end()) {
-		return NULL;
-	}
+	if (this->relations.find(name) == relations.end()) return NULL;
 
 	return this->relations[name];
 }
