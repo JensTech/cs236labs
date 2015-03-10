@@ -104,7 +104,8 @@ Relation* RelationalDatabase::project(Relation* operand, vector<string> new_sche
 			new_row.push_back(operand_row[operand_position]);
 		}
 
-		result->addRow(new_row);
+		// make sure the row is at all populated
+		if (new_row.size() > 0) result->addRow(new_row);
 	}
 
 	return result;

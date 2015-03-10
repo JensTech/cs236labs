@@ -89,24 +89,25 @@ bool Interpreter::runRule(Rule* rule) {
 	vector<Predicate*> predicate_list = rule->predicateList;
 
 	// the result of relation joins
-	Relation* join = NULL;
+	Relation* join_result = NULL;
 
 	for (unsigned int i = 0; i < predicate_list.size(); i++) {
 		string relation_name = predicate_list[i]->id->getExtracted();
+		Relation* operand = this->database->getRelation(relation_name);
 		// make sure the relation exists at this point
-		if (this->database->getRelation(relation_name) == NULL) continue;
+		if (operand == NULL) continue;
 
-		this->runQuery(relation_name, predicate_list[i]);
-		if (join == NULL) {
-			join = this->database->getRelation("rename_result");
+		pair<unsigned int, Relation*> query_result = this->runQuery(operand, predicate_list[i]);
+		if (join_result == NULL) {
+			join_result = get<1>(query_result);
 		} else {
-			join = this->database->join("join", "rename_result");
+			// join the two results together
+			join_result = this->database->join(join_result, get<1>(query_result));
 		}
-		this->database->addRelation("join", join);
 	}
 
 	// you're going to have to get this one on another pass
-	if (join == NULL) return false;
+	if (join_result == NULL) return false;
 
 	// project the joined relation to the headPredicate's parameters
 	vector<Parameter*> parameter_list = head_predicate->parameterList;
@@ -116,14 +117,15 @@ bool Interpreter::runRule(Rule* rule) {
 			new_scheme.push_back(parameter_list[i]->value->getExtracted());
 		}
 	}
-	Relation* project_result = this->database->project("join", new_scheme);
-	this->database->addRelation("project_result", project_result);
+	Relation* project_result = this->database->project(join_result, new_scheme);
 
 	// rename the columns to the predefined scheme
 	string relation_name = head_predicate->id->getExtracted();
 	Relation* original_relation = this->database->getRelation(relation_name);
-	Relation* rename_result = this->database->rename("project_result", original_relation->scheme);
-	this->database->addRelation("rename_result", rename_result);
+	if (original_relation == NULL) {
+		cout << "uninitialized relation; will result in segfault" << endl;
+	}
+	Relation* rename_result = this->database->rename(project_result, original_relation->scheme);
 
 	// track rows before union
 	unsigned int size_before = 0;
@@ -131,7 +133,7 @@ bool Interpreter::runRule(Rule* rule) {
 		size_before = original_relation->rows.size();
 	}
 
-	Relation* union_result = this->database->relation_union(relation_name, "rename_result");
+	Relation* union_result = this->database->relation_union(original_relation, rename_result);
 	this->database->addRelation(relation_name, union_result);
 
 	// something changed
@@ -141,19 +143,14 @@ bool Interpreter::runRule(Rule* rule) {
 	return false;
 }
 
-void Interpreter::runQuery(string relation_name, Predicate* query) {
-	// make sure that the relation exists in the database
-	Relation* relation = this->database->getRelation(relation_name);
-	if (relation == NULL) return;
-
+pair<unsigned int, Relation*> Interpreter::runQuery(Relation* relation, Predicate* query) {
 	// select with the query parameters
 	vector<Parameter*> parameter_list = query->parameterList;
 	vector<string> values;
 	for (unsigned int i = 0; i < parameter_list.size(); i++) {
 		values.push_back(parameter_list[i]->value->getExtracted());
 	}
-	Relation* select_result = this->database->select(relation_name, values);
-	this->database->addRelation("select_result", select_result);
+	Relation* select_result = this->database->select(relation, values);
 
 	// project the necessary columns
 	vector<string> new_scheme;
@@ -162,18 +159,19 @@ void Interpreter::runQuery(string relation_name, Predicate* query) {
 			new_scheme.push_back(relation->scheme[i]);
 		}
 	}
-	Relation* project_result = this->database->project("select_result", new_scheme);
-	this->database->addRelation("project_result", project_result);
+	Relation* project_result = this->database->project(select_result, new_scheme);
 
 	// rename the columns
 	vector<string> scheme;
 	for (unsigned int i = 0; i < parameter_list.size(); i++) {
+		// only include columns of type ID
 		if (parameter_list[i]->type == ID) {
 			scheme.push_back(parameter_list[i]->value->getExtracted());
 		}
 	}
-	Relation* rename_result = this->database->rename("project_result", scheme);
-	this->database->addRelation("rename_result", rename_result);
+	Relation* rename_result = this->database->rename(project_result, scheme);
+
+	return pair<unsigned int, Relation*>(select_result->rows.size(), rename_result);
 }
 
 string Interpreter::runQueries() {
@@ -189,24 +187,21 @@ string Interpreter::runQueries() {
 		Relation* relation = this->database->getRelation(relation_name);
 		if (relation == NULL) continue;
 
-		this->runQuery(relation_name, query);
-
-		Relation* select_result = this->database->getRelation("select_result");
-		// Relation* project_result = this->database->getRelation("project_result"); // unused
-		Relation* rename_result = this->database->getRelation("rename_result");
-
+		pair<unsigned int, Relation*> query_result = this->runQuery(relation, query);
+		unsigned int select_size = get<0>(query_result);
+		Relation* result = get<1>(query_result);
 
 		// output the result
 		output += queries[i]->toString() + "?";
-		if (rename_result->rows.size() == 0 && select_result->rows.size() == 0) {
+		if (select_size == 0) {
 			output += " No\n";
 		} else {
 			stringstream ss;
-			ss << select_result->rows.size();
+			ss << select_size;
 			output += " Yes(" + ss.str() + ")\n";
 		}
-		if (rename_result->rows.size() > 0) {
-			output += rename_result->toString();
+		if (result->rows.size() > 0) {
+			output += result->toString();
 		}
 	}
 

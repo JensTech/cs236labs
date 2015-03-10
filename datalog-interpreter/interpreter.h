@@ -32,7 +32,7 @@ private:
 	void addFacts();
 	void runRules();
 	bool runRule(Rule*);
-	void runQuery(string, Predicate*);
+	pair<unsigned int, Relation*> runQuery(Relation*, Predicate*);
 };
 
 #endif /* INTERPRETER_H */
