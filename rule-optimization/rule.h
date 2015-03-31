@@ -17,6 +17,7 @@ public:
 	Predicate* headPredicate;
 	vector<Predicate*> predicateList;
 	string id;
+	bool reflexive;
 };
 
 #endif /* RULE_H */

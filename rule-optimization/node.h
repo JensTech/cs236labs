@@ -16,7 +16,7 @@ class Node {
 public:
 	Node(string);
 	~Node();
-	void addChild(Node*);
+	bool addChild(Node*);
 	Node* findById(string);
 
 	bool visited;

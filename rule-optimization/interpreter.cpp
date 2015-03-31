@@ -83,12 +83,15 @@ void Interpreter::runRules() {
 
 			passes++;
 			// break if there was no change this iteration or if the connection subset has a size of one
-			if (!change || connection_subset.size() == 1) break;
+			if (!change || (connection_subset.size() == 1 && !connection_subset[0]->reflexive)) break;
 		}
 
+		cout << passes << " passes: ";
 		for (unsigned int j = 0; j < connection_subset.size(); j++) {
-			cout << passes << " passes: " << connection_subset[j]->id << endl;
+			if (j > 0) cout << ",";
+			cout << connection_subset[j]->id;
 		}
+		cout << endl;
 	}
 
 	// output the number of passes

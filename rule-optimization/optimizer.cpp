@@ -39,10 +39,11 @@ void Optimizer::buildTrees() {
 				string predicate_id = this->rules[i]->predicateList[j]->id->getExtracted();
 				string rule_id = this->rules[k]->headPredicate->id->getExtracted();
 				if (predicate_id == rule_id) {
-					if (this->forward_tree[i]->children.size() > 0) cout << ",";
-					cout << this->rules[k]->id;
 					// forward tree
-					this->forward_tree[i]->addChild(this->forward_tree[k]);
+					if (this->forward_tree[i]->addChild(this->forward_tree[k])) {
+						if (this->forward_tree[i]->children.size() > 1) cout << ","; // make sure at least one child was already there
+						cout << this->rules[k]->id;
+					}
 					// backward tree
 					this->backward_tree[k]->addChild(this->backward_tree[i]);
 				}
@@ -87,6 +88,7 @@ vector<Rule*> Optimizer::dfsVector(Node* node) {
 	vector<Rule*> tree;
 	tree.push_back(this->findRuleById(node->id));
 	for (unsigned int i = 0; i < node->children.size(); i++) {
+		if (node->children[i] == node) tree.back()->reflexive = true;
 		if (!node->children[i]->visited) {
 			vector<Rule*> sub_tree = this->dfsVector(node->children[i]);
 			tree.insert(tree.end(), sub_tree.begin(), sub_tree.end());

@@ -4,6 +4,7 @@
 
 Rule::Rule() {
 	this->headPredicate = NULL;
+	this->reflexive = false;
 }
 
 Rule::~Rule() {
