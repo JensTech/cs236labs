@@ -27,6 +27,7 @@ private:
 	vector<Rule*> dfsVector(Node*);
 	Node* findNodeById(string);
 	Rule* findRuleById(string);
+	vector<vector<Rule*>> sortForest(vector<vector<Rule*>>);
 
 	vector<Rule*> rules;
 	vector<Node*> forward_tree;

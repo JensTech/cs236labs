@@ -30,24 +30,29 @@ Optimizer::~Optimizer() {
 }
 
 void Optimizer::buildTrees() {
-	cout << "Dependency Graph" << endl;
 	// build forward and backward trees
 	for (unsigned int i = 0; i < this->rules.size(); i++) {
-		cout << this->rules[i]->id << ":";
 		for (unsigned int j = 0; j < this->rules[i]->predicateList.size(); j++) {
 			for (unsigned int k = 0; k < this->rules.size(); k++) {
 				string predicate_id = this->rules[i]->predicateList[j]->id->getExtracted();
 				string rule_id = this->rules[k]->headPredicate->id->getExtracted();
 				if (predicate_id == rule_id) {
 					// forward tree
-					if (this->forward_tree[i]->addChild(this->forward_tree[k])) {
-						if (this->forward_tree[i]->children.size() > 1) cout << ","; // make sure at least one child was already there
-						cout << this->rules[k]->id;
-					}
+					this->forward_tree[i]->addChild(this->forward_tree[k]);
 					// backward tree
 					this->backward_tree[k]->addChild(this->backward_tree[i]);
 				}
 			}
+		}
+	}
+
+	cout << "Dependency Graph" << endl;
+	// print forward tree
+	for (unsigned int i = 0; i < this->forward_tree.size(); i++) {
+		cout << this->forward_tree[i]->id << ":";
+		for (unsigned int j = 0; j < this->forward_tree[i]->children.size(); j++) {
+			if (j > 0) cout << ",";
+			cout << this->forward_tree[i]->children[j]->id;
 		}
 		cout << endl;
 	}
@@ -68,6 +73,21 @@ vector<vector<Rule*>> Optimizer::strongConnections() {
 		Node* forward_node = this->findNodeById(backward_node->id);
 		if (!forward_node->visited) {
 			forest.push_back(this->dfsVector(forward_node));
+		}
+	}
+	return this->sortForest(forest);
+}
+
+vector<vector<Rule*>> Optimizer::sortForest(vector<vector<Rule*>> forest) {
+	for (unsigned int i = 0; i < forest.size(); i++) {
+		for (unsigned int j = 0; j < forest[i].size(); j++) {
+			for (unsigned int k = j + 1; k < forest[i].size(); k++) {
+				if (forest[i][j]->id > forest[i][k]->id) {
+					Rule* tmp = forest[i][j];
+					forest[i][j] = forest[i][k];
+					forest[i][k] = tmp;
+				}
+			}
 		}
 	}
 	return forest;
