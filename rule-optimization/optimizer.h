@@ -19,10 +19,10 @@ class Optimizer {
 public:
 	Optimizer(vector<Rule*>);
 	~Optimizer();
+	vector<vector<Rule*>> strongConnections();
 private:
 	void buildTrees();
 	void buildPostorder();
-	vector<vector<Rule*>> strongConnections();
 	void dfsStack(Node*);
 	vector<Rule*> dfsVector(Node*);
 	Node* findNodeById(string);

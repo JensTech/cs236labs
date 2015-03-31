@@ -64,25 +64,35 @@ void Interpreter::addFacts() {
 void Interpreter::runRules() {
 	vector<Rule*> rules = this->program->rules;
 	Optimizer optimizer = Optimizer(rules);
+	vector<vector<Rule*>> connections = optimizer.strongConnections();
 
-	// keep track of the passes through rules
-	int passes = 0;
-	while (true) {
-		bool change = false;
-		for (unsigned int i = 0; i < rules.size(); i++) {
-			// check if the rule changed the db
-			if (runRule(rules[i])) {
-				change = true;
+	cout << endl << "Rule Evaluation" << endl;
+	for (unsigned int i = 0; i < connections.size(); i++) {
+		vector<Rule*> connection_subset = connections[i];
+
+		// keep track of the passes through rules
+		int passes = 0;
+		while (true) {
+			bool change = false;
+			for (unsigned int j = 0; j < connection_subset.size(); j++) {
+				// check if the rule changed the db
+				if (runRule(connection_subset[j])) {
+					change = true;
+				}
 			}
+
+			passes++;
+			// break if there was no change this iteration or if the connection subset has a size of one
+			if (!change || connection_subset.size() == 1) break;
 		}
 
-		passes++;
-		// break if there was no change this iteration
-		if (!change) break;
+		for (unsigned int j = 0; j < connection_subset.size(); j++) {
+			cout << passes << " passes: " << connection_subset[j]->id << endl;
+		}
 	}
 
 	// output the number of passes
-	cout << "Schemes populated after " << passes << " passes through the Rules." << endl;
+	// cout << "Schemes populated after " << passes << " passes through the Rules." << endl;
 }
 
 bool Interpreter::runRule(Rule* rule) {
@@ -176,6 +186,7 @@ pair<unsigned int, Relation*> Interpreter::runQuery(Relation* relation, Predicat
 }
 
 string Interpreter::runQueries() {
+	cout << endl << "Query Evaluation" << endl;
 	string output = "";
 
 	vector<Predicate*> queries = this->program->queries;

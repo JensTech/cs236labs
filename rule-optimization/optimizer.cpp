@@ -29,14 +29,18 @@ Optimizer::~Optimizer() {
 	}
 }
 
-void Optimizer::buildTrees() {	
+void Optimizer::buildTrees() {
+	cout << "Dependency Graph" << endl;
 	// build forward and backward trees
-	for (unsigned int i = 0; i < rules.size(); i++) {
-		for (unsigned int j = 0; j < rules->predicateList.size(); j++) {
-			for (unsigned int k = 0; k < rules.size(); k++) {
-				string predicate_id = rules->predicateList[j]->id->getExtracted();
-				string rule_id = rules[k]->headPredicate->id->getExtracted();
+	for (unsigned int i = 0; i < this->rules.size(); i++) {
+		cout << this->rules[i]->id << ":";
+		for (unsigned int j = 0; j < this->rules[i]->predicateList.size(); j++) {
+			for (unsigned int k = 0; k < this->rules.size(); k++) {
+				string predicate_id = this->rules[i]->predicateList[j]->id->getExtracted();
+				string rule_id = this->rules[k]->headPredicate->id->getExtracted();
 				if (predicate_id == rule_id) {
+					if (this->forward_tree[i]->children.size() > 0) cout << ",";
+					cout << this->rules[k]->id;
 					// forward tree
 					this->forward_tree[i]->addChild(this->forward_tree[k]);
 					// backward tree
@@ -44,6 +48,7 @@ void Optimizer::buildTrees() {
 				}
 			}
 		}
+		cout << endl;
 	}
 }
 
@@ -55,15 +60,20 @@ void Optimizer::buildPostorder() {
 }
 
 vector<vector<Rule*>> Optimizer::strongConnections() {
-	int tree_count = 0;
+	vector<vector<Rule*>> forest;
 	while (this->postorder.size()) {
-		Node* backward_node = postorder.pop();
+		Node* backward_node = postorder.top();
+		postorder.pop();
 		Node* forward_node = this->findNodeById(backward_node->id);
+		if (!forward_node->visited) {
+			forest.push_back(this->dfsVector(forward_node));
+		}
 	}
+	return forest;
 }
 
 void Optimizer::dfsStack(Node* node) {
-	this->node->visited = true;
+	node->visited = true;
 	for (unsigned int i = 0; i < node->children.size(); i++) {
 		if (!node->children[i]->visited) {
 			this->dfsStack(node->children[i]);
@@ -73,7 +83,7 @@ void Optimizer::dfsStack(Node* node) {
 }
 
 vector<Rule*> Optimizer::dfsVector(Node* node) {
-	this->node->visited = true;
+	node->visited = true;
 	vector<Rule*> tree;
 	tree.push_back(this->findRuleById(node->id));
 	for (unsigned int i = 0; i < node->children.size(); i++) {

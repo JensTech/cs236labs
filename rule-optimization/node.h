@@ -10,15 +10,17 @@ using namespace std;
 #include <string>
 #include <set>
 #include <sstream>
+#include <vector>
 
 class Node {
 public:
 	Node(string);
 	~Node();
 	void addChild(Node*);
-	
+	Node* findById(string);
+
 	bool visited;
-	set<Node*> children;
+	vector<Node*> children;
 	string id;
 private:
 	
